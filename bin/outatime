@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/outatime'
+
+begin
+  options = Trollop::options do
+    opt :region, "AWS region", type: :string, default: "us-west-2"
+    opt :bucket, "Bucket name", type: :string, required: true
+    opt :from, "Time description", type: :string, required: true
+    opt :prefix, "Restore files from this prefix", type: :string, default: ""
+    opt :destination, "Destination for restored files", type: :string, required: true
+    opt :profile, "AWS Profile Name", type: :string, required: false, default: nil
+    opt :threads, "Number of download threads", type: :integer, default: 20
+    opt :verbose, "Verbose Mode", type: :boolean, default: false
+  end
+
+  if options[:profile]
+    Outatime.update_aws_profile(
+      region:      options[:region],
+      credentials: Aws::SharedCredentials.new(profile_name: options[:profile])
+    )
+  end
+
+  Outatime::CLI.new(options).run
+
+rescue => e
+  raise e if $DEBUG
+  STDERR.puts e.message
+  STDERR.puts e.backtrace.join("\n")
+  exit 1
+end
