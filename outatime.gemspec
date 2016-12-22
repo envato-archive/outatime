@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Choose versioned S3 files from a point in time.}
   spec.description   = %q{Choose file versions from a versioned S3 bucket based on a given time.}
   spec.homepage      = "https://github.com/pressednet/outatime/"
+  spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
