@@ -21,12 +21,12 @@ Or install it yourself as:
 ## Usage
 
 ```
-outatime -r {region} -b {bucket-name} -f {date} -p {subdirectory} --profile {aws profile name}
+outatime -r {region} -b {bucket name} -f {date} -p {s3 subdirectory} --d {local path} --o {aws profile name}
 ```
 
 Example:
 ```
-outatime -r us-east-1 -b my-bucket -f '21 Oct 2015' -p schematics/hoverboard --profile aws-profile
+outatime -r us-east-1 -b my-bucket -f '21 Oct 2015' -p schematics/hoverboard -d ~/docs -o aws-profile
 ```
 
 ## Development
