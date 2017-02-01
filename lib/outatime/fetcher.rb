@@ -53,8 +53,8 @@ module Outatime
         s3_client.list_object_versions(bucket: @options[:bucket],
           prefix: @options[:prefix]).each do |response|
 
-          versions       += filter_future_items(response.versions, @from)
-          delete_markers += filter_future_items(response.delete_markers, @from)
+          versions.concat(filter_future_items(response.versions))
+          delete_markers.concat(filter_future_items(response.delete_markers))
         end
 
         # keep only the latest versions
@@ -127,16 +127,13 @@ module Outatime
       @s3_client ||= Aws::S3::Client.new(region: region)
     end
 
-    # Private: Returns an Array of items modified on or before the given date/time.
+    # Private: Returns an Array of items modified on or before the @from date/time.
     #
     # items - An Array of objects. Object must respond to #last_modified.
-    # date_time - Comparison date/time.
     #
     # Returns Array.
-    def filter_future_items(items, date_time)
-      items.find_all do |obj|
-        obj.last_modified <= @from
-      end
+    def filter_future_items(items)
+      items.keep_if { |obj| obj.last_modified <= @from }
     end
   end
 end
