@@ -22,7 +22,7 @@ module Outatime
     def run
       fetcher = Outatime::Fetcher.new(options)
 
-      pb = ProgressBar.create(total: fetcher.total_size,
+      pb = ProgressBar.create(total: nil,
                               format: "%t: |%B| %f %c/%C %R MB/sec",
                               rate_scale: lambda { |rate| rate / 1024 / 1024 },
                               throttle_rate: 0.5)

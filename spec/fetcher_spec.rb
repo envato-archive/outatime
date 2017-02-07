@@ -68,7 +68,7 @@ describe Outatime::Fetcher do
         }
       )
 
-      allow(subject).to receive(:object_versions).and_return(files)
+      allow(subject).to receive(:object_versions).and_yield(files[0]).and_yield(files[1])
     end
 
     it "downloads the files" do
@@ -102,9 +102,12 @@ describe Outatime::Fetcher do
   end
 
   describe "#object_versions" do
-    it "generates the proper object versions" do
-      s3_client.stub_responses(:list_object_versions,
-        versions: [
+    let(:first_response) do
+      s3_client.stub_data(:list_object_versions,
+        {
+          next_key_marker: 'README',
+          next_version_id_marker: '111',
+          versions: [
           {
             key: "future_file",
             last_modified: Chronic.parse("2016-11-05 14:49:00.000000000 Z"),
@@ -127,18 +130,8 @@ describe Outatime::Fetcher do
           },
           {
             key: "README",
-            last_modified: Chronic.parse("2016-10-26 14:48:00.000000000 Z"),
+            last_modified: Chronic.parse("2016-11-05 15:48:00.000000000 Z"),
             version_id: "112"
-          },
-          {
-            key: "README",
-            last_modified: Chronic.parse("2016-10-26 14:47:00.000000000 Z"),
-            version_id: "111"
-          },
-          {
-            key: "lib/",
-            last_modified: Chronic.parse("2016-10-26 14:46:00.000000000 Z"),
-            version_id: "661"
           },
         ],
         delete_markers: [
@@ -154,9 +147,34 @@ describe Outatime::Fetcher do
             key: "README",
             last_modified: Chronic.parse("2016-10-26 14:40:00.000000000 Z") # delete mark that happened before the last file modification, so it is ignored
           }
-        ])
+        ]})
+    end
 
-      versions = subject.object_versions
+    let(:second_response) do
+      s3_client.stub_data(:list_object_versions,
+        {
+          versions: [
+          {
+            key: "README",
+            last_modified: Chronic.parse("2016-10-26 14:47:00.000000000 Z"),
+            version_id: "111"
+          },
+          {
+            key: "lib/",
+            last_modified: Chronic.parse("2016-10-26 14:46:00.000000000 Z"),
+            version_id: "661"
+          },
+        ],
+        delete_markers: []
+        })
+    end
+
+    it "generates the proper object versions" do
+      expect(s3_client).to receive(:list_object_versions)
+        .and_return([first_response, second_response])
+
+      versions = []
+      subject.object_versions {|v| versions << v }
 
       # ensure we are returning S3 object versions
       expect(versions.map(&:class).uniq).to eq([Aws::S3::Types::ObjectVersion])
@@ -167,7 +185,7 @@ describe Outatime::Fetcher do
       # ensure the correct file versions are returned
       expect(versions.map(&:version_id))
         .to match_array([
-          "112", # README
+          "111", # README
           "221", # index.html
           "661", # lib/
         ])
