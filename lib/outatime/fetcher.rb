@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'thread/pool'
 
 # Outatime::Fetcher is responsible for finding the exact revision for each file

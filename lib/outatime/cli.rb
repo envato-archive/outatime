@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Outatime
   class CLI
     attr_accessor :options
